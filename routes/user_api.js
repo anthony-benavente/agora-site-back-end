@@ -20,7 +20,6 @@ module.exports = function(connection) {
     }
 
     router.post('/signin', function(req, res, next) {
-        console.log(res);
         var authHandler = function(err, rows, fields) {
             if (err) {
                 res.json({
