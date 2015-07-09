@@ -19,6 +19,7 @@ connection.connect(function(err) {
 
 var userApi = require('./routes/user_api')(connection);
 var classApi = require('./routes/class_api')(connection);
+var programApi = require('./routes/program_api')(connection);
 
 Object.prototype.extend = function(other) {
     for (var i in other) {
@@ -41,6 +42,7 @@ app.use(function(req, res, next) {
 });
 app.use('/api/users', userApi);
 app.use('/api/classes', classApi);
+app.use('/api/programs', programApi);
 
 var server = app.listen(3000, function() {
     var host = server.address().address;
