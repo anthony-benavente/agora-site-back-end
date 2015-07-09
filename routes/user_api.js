@@ -64,18 +64,30 @@ module.exports = function(connection) {
                 email: req.body.email
             };
             newUser.token = jwt.sign(newUser, jwt_secret);
-            var sql = 'INSERT INTO User (name, email, username, password, token) VALUES (?,?,?,?,?)';
+            var sql = 'INSERT INTO User (name, email, username, password) VALUES (?,?,?,?)';
             var postVars = [
-                newUser.name, newUser.email, newUser.username, newUser.password, newUser.token
+                newUser.name, newUser.email, newUser.username, newUser.password
             ];
-            connection.query(sql, postVars, function(err) {
+            connection.query(sql, postVars, function(err, result) {
                 if (!err) {
-                    res.json({
-                        type: true,
-                        data: newUser,
-                        token: newUser.token
-                    });
+                    var updateSql = 'UPDATE User SET token=? WHERE userId=?';
+                    newUser.userId = result.insertId;
+                    var newToken = jwt.sign(newUser, jwt_secret);
+                    newUser.token = newToken;
+                    connection.query(updateSql, [newToken, result.insertId], function(err) {
+                        if (!err) {
+                            res.json({
+                                type: true,
+                                data: newUser,
+                                token: newUser.token
+                            });
+                        } else {
+                            console.log(err);
+                            res.json({ type: false, data: 'Failed to create user' });
+                        }
+                    })
                 } else {
+                    console.log(err);
                     res.json({
                         type: false,
                         data: 'Failed to insert user'

@@ -1,6 +1,7 @@
 var express = require('express');
 var password = require('password-hash-and-salt');
 var jwt = require('jsonwebtoken');
+var base64url = require('base64-url');
 var jwt_secret = ';IHRLAEJ23!o!:@e|oids/';
 
 module.exports = function(connection) {
@@ -27,9 +28,29 @@ module.exports = function(connection) {
         return req.headers['authorization'].split(' ')[1];
     }
 
+    function getUserId(token) {
+        var output = token.split('.')[1].replace('-', '+').replace('_', '/');
+        switch (output.length % 4) {
+            case 0:
+                break;
+            case 2:
+                output += '==';
+                break;
+            case 3:
+                output += '=';
+                break;
+            default:
+                throw 'Illegal base64url string'
+        }
+        console.log(base64url.decode(output));
+        return JSON.parse(base64url.decode(output));
+    }
+
     router.get('/', function(req, res) {
-        connection.query('SELECT * FROM Class', function(err, rows, fields) {
-            if (!err && rows.length > 0) {
+        var userId = getUserId(getToken(req)).userId;
+        console.log(userId);
+        connection.query('SELECT * FROM Class WHERE professorId = ?', [userId], function(err, rows, fields) {
+            if (!err) {
                 res.json({
                     type: true,
                     data: rows
