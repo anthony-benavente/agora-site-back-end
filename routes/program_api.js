@@ -44,15 +44,11 @@ module.exports = function(connection) {
     });
 
     router.post('/', ensureAuthorized, function(req, res, next) {
-        var sql = ' INSERT INTO Class (className, programId, courseCode, semester, year, professorId)'  +
-                  ' VALUES (?, ?, ?, ?, ?, ?)';
+        var sql = ' INSERT INTO Program (shortCode, programName)'  +
+                  ' VALUES (?, ?)';
         var postVars = [
-            req.body.className,
-            req.body.programId,
-            req.body.courseCode,
-            req.body.semester,
-            req.body.year,
-            req.body.professorId
+            req.body.shortCode,
+            req.body.programName
         ];
 
         connection.query(sql, postVars, function(err, rows, fields) {
@@ -64,9 +60,9 @@ module.exports = function(connection) {
         })
     });
 
-    router.get('/:classId', function(req, res, next) {
-        var sql = 'SELECT * FROM Class WHERE classId = ?';
-        connection.query(sql, [req.params.classId], function(err, rows, fields) {
+    router.get('/:programId', function(req, res, next) {
+        var sql = 'SELECT * FROM Program WHERE programId = ?';
+        connection.query(sql, [req.params.programId], function(err, rows, fields) {
             if (err) {
                 writeErr(res, err);
             } else {
@@ -75,39 +71,27 @@ module.exports = function(connection) {
         });
     });
 
-    router.put('/:classId', ensureAuthorized, function(req, res, next) {
-        connection.query('SELECT className, programId, courseCode, semester, year, professorId FROM Class WHERE classId = ?', [req.params.classId], function(err, rows, fields) {
+    router.put('/:programId', ensureAuthorized, function(req, res, next) {
+        connection.query('SELECT shortCode, programName FROM Program WHERE programId = ?', [req.params.classId], function(err, rows, fields) {
             if (err) {
                 writeErr(res, err);
             } else {
-                connection.query('SELECT userId FROM User WHERE userId = ?', [getToken(req)], function(err, rows2, fields) {
-                    if (err || getToken(req) != rows[0][5]) {
-                        writeErr(res, 'Cannot access resource');
-                    } else {
-                        var sql = 'UPDATE Class SET className=?,programId=?,courseCode=?,semester=?,year=? WHERE classId = ?';
-                        var defaultVars = {
-                            className: rows[0][0],
-                            programId: rows[0][1],
-                            semester: rows[0][2],
-                            year: rows[0][3],
-                            courseCode: rows[0][4]
-                        }.extend(req.body);
-                        var postVars = [
-                            defaultVars.className,
-                            defaultVars.programId,
-                            defaultVars.courseCode,
-                            defaultVars.semester,
-                            defaultVars.year,
-                            req.params.classId
-                        ];
+                var sql = 'UPDATE Program SET shortCode=?, programName=? WHERE programId = ?';
+                var defaultVars = {
+                    shortCode: rows[0][0],
+                    programName: rows[0][1]
+                }.extend(req.body);
+                var postVars = [
+                    defaultVars.shortCode,
+                    defaultVars.programName,
+                    req.params.programId
+                ];
 
-                        connection.query(sql, postVars, function(err, rows, fields) {
-                            if (err) {
-                                writeErr(res, err);
-                            } else {
-                                res.json({ type: true, msg: 'Updated row successfully', data: defaultVars });
-                            }
-                        });
+                connection.query(sql, postVars, function(err, rows, fields) {
+                    if (err) {
+                        writeErr(res, err);
+                    } else {
+                        res.json({ type: true, msg: 'Updated row successfully', data: defaultVars });
                     }
                 });
             }
