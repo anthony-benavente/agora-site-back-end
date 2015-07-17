@@ -28,7 +28,7 @@ module.exports = function(connection) {
     }
 
     router.get('/', function(req, res) {
-        connection.query('SELECT * FROM Program', function(err, rows, fields) {
+        connection.query('SELECT * FROM program', function(err, rows, fields) {
             if (!err && rows.length > 0) {
                 res.json({
                     type: true,
@@ -44,7 +44,7 @@ module.exports = function(connection) {
     });
 
     router.post('/', ensureAuthorized, function(req, res, next) {
-        var sql = ' INSERT INTO Program (shortCode, programName)'  +
+        var sql = ' INSERT INTO program (shortCode, programName)'  +
                   ' VALUES (?, ?)';
         var postVars = [
             req.body.shortCode,
@@ -61,7 +61,7 @@ module.exports = function(connection) {
     });
 
     router.get('/:programId', function(req, res, next) {
-        var sql = 'SELECT * FROM Program WHERE programId = ?';
+        var sql = 'SELECT * FROM program WHERE programId = ?';
         connection.query(sql, [req.params.programId], function(err, rows, fields) {
             if (err) {
                 writeErr(res, err);
@@ -72,11 +72,11 @@ module.exports = function(connection) {
     });
 
     router.put('/:programId', ensureAuthorized, function(req, res, next) {
-        connection.query('SELECT shortCode, programName FROM Program WHERE programId = ?', [req.params.classId], function(err, rows, fields) {
+        connection.query('SELECT shortCode, programName FROM program WHERE programId = ?', [req.params.classId], function(err, rows, fields) {
             if (err) {
                 writeErr(res, err);
             } else {
-                var sql = 'UPDATE Program SET shortCode=?, programName=? WHERE programId = ?';
+                var sql = 'UPDATE program SET shortCode=?, programName=? WHERE programId = ?';
                 var defaultVars = {
                     shortCode: rows[0][0],
                     programName: rows[0][1]

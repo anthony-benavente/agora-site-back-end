@@ -13,7 +13,7 @@ module.exports = function(connection) {
 
     function ensureAuthorized(req, res, next) {
         var bearerToken;
-        var bearerHeader = req.headers["authorization"];
+        var bearerHeader = req.headers.authorization;
         if (typeof bearerHeader !== 'undefined') {
             var bearer = bearerHeader.split(" ");
             bearerToken = bearer[1];
@@ -25,7 +25,7 @@ module.exports = function(connection) {
     }
 
     function getToken(req) {
-        return req.headers['authorization'].split(' ')[1];
+        return req.headers.authorization.split(' ')[1];
     }
 
     function getUserId(token) {
@@ -40,7 +40,7 @@ module.exports = function(connection) {
                 output += '=';
                 break;
             default:
-                throw 'Illegal base64url string'
+                throw 'Illegal base64url string';
         }
         console.log(base64url.decode(output));
         return JSON.parse(base64url.decode(output));
@@ -49,7 +49,7 @@ module.exports = function(connection) {
     router.get('/', function(req, res) {
         var userId = getUserId(getToken(req)).userId;
         console.log(userId);
-        connection.query('SELECT * FROM Class WHERE professorId = ?', [userId], function(err, rows, fields) {
+        connection.query('SELECT * FROM class WHERE professorId = ?', [userId], function(err, rows, fields) {
             if (!err) {
                 res.json({
                     type: true,
@@ -65,7 +65,7 @@ module.exports = function(connection) {
     });
 
     router.post('/', ensureAuthorized, function(req, res, next) {
-        var sql = ' INSERT INTO Class (className, programId, courseCode, semester, year, professorId)'  +
+        var sql = ' INSERT INTO class (className, programId, courseCode, semester, year, professorId)'  +
                   ' VALUES (?, ?, ?, ?, ?, ?)';
         var postVars = [
             req.body.className,
@@ -80,24 +80,24 @@ module.exports = function(connection) {
             if (err) {
                 res.json({ type: false, data: 'Error occured: ' + err });
             } else {
-                res.json({ type: true, msg: 'Inserted records successfully', data: postVars })
+                res.json({ type: true, msg: 'Inserted records successfully', data: postVars });
             }
-        })
+        });
     });
 
     router.get('/:classId', function(req, res, next) {
-        var sql = 'SELECT * FROM Class WHERE classId = ?';
+        var sql = 'SELECT * FROM class WHERE classId = ?';
         connection.query(sql, [req.params.classId], function(err, rows, fields) {
             if (err) {
                 writeErr(res, err);
             } else {
-                res.json({ type: true, data: rows[0] })
+                res.json({ type: true, data: rows[0] });
             }
         });
     });
 
     router.put('/:classId', ensureAuthorized, function(req, res, next) {
-        connection.query('SELECT className, programId, courseCode, semester, year, professorId FROM Class WHERE classId = ?', [req.params.classId], function(err, rows, fields) {
+        connection.query('SELECT className, programId, courseCode, semester, year, professorId FROM class WHERE classId = ?', [req.params.classId], function(err, rows, fields) {
             if (err) {
                 writeErr(res, err);
             } else {
@@ -105,7 +105,7 @@ module.exports = function(connection) {
                     if (err || getToken(req) != rows[0][5]) {
                         writeErr(res, 'Cannot access resource');
                     } else {
-                        var sql = 'UPDATE Class SET className=?,programId=?,courseCode=?,semester=?,year=? WHERE classId = ?';
+                        var sql = 'UPDATE class SET className=?,programId=?,courseCode=?,semester=?,year=? WHERE classId = ?';
                         var defaultVars = {
                             className: rows[0][0],
                             programId: rows[0][1],
@@ -132,7 +132,7 @@ module.exports = function(connection) {
                     }
                 });
             }
-        })
+        });
     });
 
     return router;

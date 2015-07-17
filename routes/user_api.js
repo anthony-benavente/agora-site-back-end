@@ -52,7 +52,7 @@ module.exports = function(connection) {
             }
         };
 
-        connection.query('SELECT * FROM User WHERE username = ?', [req.body.username], authHandler);
+        connection.query('SELECT * FROM user WHERE username = ?', [req.body.username], authHandler);
     });
 
     router.post('/register', function(req, res) {
@@ -64,13 +64,13 @@ module.exports = function(connection) {
                 email: req.body.email
             };
             newUser.token = jwt.sign(newUser, jwt_secret);
-            var sql = 'INSERT INTO User (name, email, username, password) VALUES (?,?,?,?)';
+            var sql = 'INSERT INTO user (name, email, username, password) VALUES (?,?,?,?)';
             var postVars = [
                 newUser.name, newUser.email, newUser.username, newUser.password
             ];
             connection.query(sql, postVars, function(err, result) {
                 if (!err) {
-                    var updateSql = 'UPDATE User SET token=? WHERE userId=?';
+                    var updateSql = 'UPDATE user SET token=? WHERE userId=?';
                     newUser.userId = result.insertId;
                     var newToken = jwt.sign(newUser, jwt_secret);
                     newUser.token = newToken;
@@ -98,7 +98,7 @@ module.exports = function(connection) {
     });
 
     router.get('/me', ensureAuthorized, function(req, res) {
-        connection.query('SELECT * FROM User WHERE token=?', req.token, function(err, rows, fields) {
+        connection.query('SELECT * FROM user WHERE token=?', req.token, function(err, rows, fields) {
             if (!err && rows.length > 0) {
                 res.json({
                     type: true,
